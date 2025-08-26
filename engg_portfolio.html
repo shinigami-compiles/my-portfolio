@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Harshal Jadhav | AI & Data Science Portfolio</title>
+    
+    <!-- Google Fonts: Roboto Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        :root {
+            --bg-color: #0a192f;
+            --primary-accent: #64ffda; /* Neon Cyan */
+            --secondary-accent: #ff00ff; /* Glitch Magenta */
+            --text-color: #ccd6f6;
+            --text-muted: #8892b0;
+            --border-color: rgba(100, 255, 218, 0.2);
+            --shadow-color: rgba(100, 255, 218, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        /* --- Blueprint Background --- */
+        .background-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(100, 255, 218, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(100, 255, 218, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: panGrid 60s linear infinite;
+            z-index: -1;
+        }
+        @keyframes panGrid {
+            0% { background-position: 0 0; }
+            100% { background-position: 1000px 1000px; }
+        }
+
+        /* --- Main Canvas --- */
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        svg.connections {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        svg.connections line {
+            stroke: var(--border-color);
+            stroke-width: 1;
+            transition: stroke 0.5s ease;
+        }
+        
+        /* --- Nodes --- */
+        .node {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            background: radial-gradient(circle, rgba(10, 25, 47, 0.5) 0%, var(--bg-color) 70%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        
+        .node:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 0 20px var(--shadow-color);
+        }
+        
+        .node.active {
+            box-shadow: 0 0 30px var(--shadow-color);
+            border-color: var(--primary-accent);
+        }
+        
+        .node .label { font-weight: 500; }
+        .node .icon { font-size: 2rem; color: var(--primary-accent); margin-bottom: 10px; }
+        
+        #home-node { 
+            top: 50%; 
+            left: 50%; 
+            width: 200px; 
+            height: 200px; 
+            perspective: 1000px;
+        }
+        #about-node { top: 30%; left: 30%; }
+        #experience-node { top: 30%; left: 70%; }
+        #skills-node { top: 70%; left: 30%; }
+        #projects-node { top: 70%; left: 70%; }
+        
+        /* --- Home Node Flip --- */
+        .home-node-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        #home-node.flipped .home-node-inner {
+            transform: rotateY(180deg);
+        }
+        .home-front, .home-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .home-back {
+            transform: rotateY(180deg);
+            flex-direction: row;
+            gap: 2rem;
+        }
+        .social-link {
+            font-size: 2.5rem;
+            color: var(--text-muted);
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        .social-link:hover {
+            color: var(--primary-accent);
+            transform: scale(1.2);
+        }
+        
+        /* --- Glitch Effect --- */
+        .glitch-text { position: relative; color: var(--primary-accent); }
+        .node:hover .glitch-text::before, .node:hover .glitch-text::after {
+            content: attr(data-text);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); overflow: hidden;
+        }
+        .node:hover .glitch-text::before { left: 2px; text-shadow: -1px 0 var(--secondary-accent); animation: glitch-anim-1 2s infinite linear alternate-reverse; }
+        .node:hover .glitch-text::after { left: -2px; text-shadow: -1px 0 var(--secondary-accent); animation: glitch-anim-2 2s infinite linear alternate-reverse; }
+        @keyframes glitch-anim-1 { 0% { clip-path: inset(45% 0 50% 0); } 100% { clip-path: inset(5% 0 90% 0); } }
+        @keyframes glitch-anim-2 { 0% { clip-path: inset(80% 0 5% 0); } 100% { clip-path: inset(40% 0 55% 0); } }
+        
+        /* --- Content Panel --- */
+        .content-panel {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            width: clamp(320px, 90vw, 800px); max-height: 80vh;
+            background: rgba(10, 25, 47, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color); border-radius: 10px; padding: 2rem;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s ease, transform 0.5s ease;
+            overflow-y: auto;
+        }
+        .content-panel.show { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+        .content-panel h2 { color: var(--primary-accent); margin-bottom: 1.5rem; }
+        .content-panel p { color: var(--text-muted); line-height: 1.8; margin-bottom: 1rem; }
+        .content-panel strong { color: var(--text-color); }
+        .content-panel ul { list-style: none; }
+        .content-panel li { margin-bottom: 0.75rem; }
+        
+        .experience-item, .project-item { margin-bottom: 1.5rem; }
+        h3 { font-size: 1.1rem; color: var(--text-color); margin-bottom: 0.25rem; display: flex; align-items: center; gap: 1rem;}
+        .company { color: var(--text-muted); font-size: 0.9rem; }
+        .project-link { color: var(--text-muted); transition: color 0.3s ease; }
+        .project-link:hover { color: var(--primary-accent); }
+        
+        .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .skill-item i { color: var(--primary-accent); margin-right: 10px; }
+
+        .close-btn {
+            position: absolute; top: 20px; right: 20px; background: none; border: none;
+            color: var(--text-muted); font-size: 1.5rem; cursor: pointer;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        .close-btn:hover { color: var(--primary-accent); transform: rotate(90deg); }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .node { width: 120px; height: 120px; }
+            #home-node { width: 150px; height: 150px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-grid"></div>
+    
+    <div class="canvas-container" id="canvas">
+        <svg class="connections" id="connections-svg"></svg>
+        
+        <div class="node" id="home-node" data-id="home">
+            <div class="home-node-inner">
+                <div class="home-front">
+                    <div class="label" style="font-size: 1.2rem; font-weight: 700;">Harshal Jadhav</div>
+                    <div class="label" style="font-size: 0.9rem; color: var(--primary-accent);">AI & DS Engineer</div>
+                </div>
+                <div class="home-back">
+                    <!-- TODO: Replace '#' with your actual social media links -->
+                    <a href="https://linkedin.com/in/jharshal10" target="_blank" class="social-link" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" target="_blank" class="social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="node" id="about-node" data-id="about">
+            <div>
+                <div class="icon"><i class="fas fa-user-astronaut"></i></div>
+                <div class="label glitch-text" data-text="About">About</div>
+            </div>
+        </div>
+        <div class="node" id="experience-node" data-id="experience">
+            <div>
+                <div class="icon"><i class="fas fa-briefcase"></i></div>
+                <div class="label glitch-text" data-text="Experience">Experience</div>
+            </div>
+        </div>
+        <div class="node" id="skills-node" data-id="skills">
+            <div>
+                <div class="icon"><i class="fas fa-microchip"></i></div>
+                <div class="label glitch-text" data-text="Skills">Skills</div>
+            </div>
+        </div>
+        <div class="node" id="projects-node" data-id="projects">
+            <div>
+                <div class="icon"><i class="fas fa-project-diagram"></i></div>
+                <div class="label glitch-text" data-text="Projects">Projects</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Content Panels -->
+    <div id="about-panel" class="content-panel">
+        <button class="close-btn"><i class="fas fa-times"></i></button>
+        <h2>About Me</h2>
+        <p>As a driven Artificial Intelligence and Data Science Engineering student , I have cultivated a deep proficiency in Data Structures, Algorithms , and scalable, Python-driven machine learning applications. I orchestrate the development and deployment of complex systems founded on ANN and CNN principles , demonstrating a keen focus on precision model tuning and peak performance optimization in real-time environments. I have translated theory into practice through impactful projects and internships, delivering solutions that range from automated enterprise systems to cutting-edge AI that pioneers real-time disease prediction.</p>
+    </div>
+    
+    <div id="experience-panel" class="content-panel">
+        <button class="close-btn"><i class="fas fa-times"></i></button>
+        <h2>Experience</h2>
+        <div class="experience-item">
+            <h3>IT Intern</h3>
+            <p class="company">Hindustan Aeronautics Limited (HAL)</p>
+            <p>Significantly enhanced operational efficiency by architecting and launching a Gatepass Visitor Management System. The system, built on C# and ASP.NET, introduced a kiosk interface that successfully reduced manual data entry by 90%. I managed the project's complete lifecycle, from backend coding and validation to its final integration into the company's daily workflow.</p>
+        </div>
+        <div class="experience-item">
+            <h3>AI/ML Intern</h3>
+            <p class="company">Edunet & Shell</p>
+            <p>In this role, I developed a predictive model for disease outbreaks, which reached a notable 86% accuracy in forecasting public health trends. Model performance was further improved by 12% through the implementation of rigorous cross-validation and hyperparameter tuning methods. To support the model, I optimized the data processing workflows using NumPy, Pandas, and Scikit-learn, which streamlined data inputs.</p>
+        </div>
+    </div>
+    
+    <div id="skills-panel" class="content-panel">
+        <button class="close-btn"><i class="fas fa-times"></i></button>
+        <h2>Technical Skills</h2>
+        <ul class="skills-grid">
+            <li class="skill-item"><i class="fa-brands fa-python"></i>Python</li>
+            <li class="skill-item"><i class="fa-brands fa-java"></i>Java</li>
+            <li class="skill-item"><i class="fas fa-code"></i>C/C++</li>
+            <li class="skill-item"><i class="fas fa-database"></i>SQL</li>
+            <li class="skill-item"><i class="fas fa-sitemap"></i>Data Structures</li>
+            <li class="skill-item"><i class="fas fa-robot"></i>Machine Learning</li>
+            <li class="skill-item"><i class="fas fa-microchip"></i>ANN & CNN</li>
+            <li class="skill-item"><i class="fas fa-object-group"></i>OOP</li>
+        </ul>
+    </div>
+    
+    <div id="projects-panel" class="content-panel">
+        <button class="close-btn"><i class="fas fa-times"></i></button>
+        <h2>Featured Projects</h2>
+        <div class="project-item">
+            <!-- TODO: Replace '#' with your project link -->
+            <h3>
+                Real-time Food Nutrition Estimator
+                <a href="#" target="_blank" class="project-link" aria-label="Project Link"><i class="fas fa-external-link-alt"></i></a>
+            </h3>
+            <p>This project involved engineering a real-time AI that combines deep learning with rule-based logic to interpret images of Indian food. By training Convolutional Neural Network (CNN) models in PyTorch and TensorFlow, the system delivered nutritional predictions with over 87% accuracy. The final application provided users with immediate nutrient breakdowns and health scores to promote better dietary habits.</p>
+        </div>
+        <div class="project-item">
+            <!-- TODO: Replace '#' with your project link -->
+            <h3>
+                SpectroGraph: Respiratory Disease Detection
+                <a href="#" target="_blank" class="project-link" aria-label="Project Link"><i class="fas fa-external-link-alt"></i></a>
+            </h3>
+            <p>SpectroGraph is a novel system designed for real-time disease detection from cough audio, utilizing a dual-CNN model that processes Mel Spectrograms. By incorporating advanced features like fake-cough rejection, the system's classification accuracy improved by 23% across more than five respiratory conditions. The project delivered a contactless diagnostic tool that resulted in a 60% faster triage response for potential patients.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('canvas');
+            const nodes = document.querySelectorAll('.node');
+            const svg = document.getElementById('connections-svg');
+            const homeNode = document.getElementById('home-node');
+            
+            const nodePositions = {};
+            
+            function drawConnections() {
+                svg.innerHTML = '';
+                nodes.forEach(node => {
+                    const id = node.dataset.id;
+                    nodePositions[id] = {
+                        x: node.offsetLeft + node.offsetWidth / 2,
+                        y: node.offsetTop + node.offsetHeight / 2
+                    };
+                });
+                
+                ['about', 'experience', 'skills', 'projects'].forEach(id => {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', nodePositions['home'].x);
+                    line.setAttribute('y1', nodePositions['home'].y);
+                    line.setAttribute('x2', nodePositions[id].x);
+                    line.setAttribute('y2', nodePositions[id].y);
+                    line.id = `line-home-${id}`;
+                    svg.appendChild(line);
+                });
+            }
+
+            window.addEventListener('resize', drawConnections);
+            drawConnections();
+
+            nodes.forEach(node => {
+                node.addEventListener('click', () => {
+                    const id = node.dataset.id;
+
+                    // --- UPDATED LOGIC ---
+                    if (id === 'home') {
+                        node.classList.toggle('flipped');
+                        return; // Stop further execution for home node
+                    }
+                    // --- END OF UPDATE ---
+
+                    const panel = document.getElementById(`${id}-panel`);
+                    if (!panel) return;
+
+                    const scale = 2.5;
+                    const x = window.innerWidth / 2 - nodePositions[id].x;
+                    const y = window.innerHeight / 2 - nodePositions[id].y;
+                    canvas.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+                    
+                    setTimeout(() => {
+                        panel.classList.add('show');
+                    }, 500);
+                    
+                    const line = document.getElementById(`line-home-${id}`);
+                    if(line) {
+                        line.style.stroke = 'var(--primary-accent)';
+                        line.style.strokeWidth = '2';
+                    }
+                });
+            });
+
+            document.querySelectorAll('.close-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btn.parentElement.classList.remove('show');
+                    canvas.style.transform = 'translate(0, 0) scale(1)';
+                    svg.querySelectorAll('line').forEach(line => {
+                        line.style.stroke = 'var(--border-color)';
+                        line.style.strokeWidth = '1';
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
